@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krishna's AWS Cloud Infrastructure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080b14;
+            --card: #111827;
+            --border: #1f2937;
+            --accent: #00d9ff;
+            --accent2: #7c3aed;
+            --accent3: #10b981;
+            --accent4: #f59e0b;
+            --text: #f1f5f9;
+            --muted: #64748b;
+            --glow: rgba(0, 217, 255, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Syne', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,217,255,.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,217,255,.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+            animation: float 8s ease-in-out infinite;
+        }
+        .orb1 { width: 400px; height: 400px; background: rgba(124,58,237,.12); top: -100px; right: -100px; }
+        .orb2 { width: 300px; height: 300px; background: rgba(0,217,255,.08); bottom: 100px; left: -80px; animation-delay: -4s; }
+        .orb3 { width: 200px; height: 200px; background: rgba(16,185,129,.08); top: 50%; left: 50%; animation-delay: -2s; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-30px); } }
+        .content { position: relative; z-index: 1; }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(8,11,20,.8);
+        }
+        .nav-logo { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--accent); letter-spacing: 2px; }
+        .nav-status { display: flex; align-items: center; gap: 8px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent3); }
+        .status-dot { width: 8px; height: 8px; background: var(--accent3); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(16,185,129,.4); } 50% { opacity:.7; box-shadow: 0 0 0 6px rgba(16,185,129,0); } }
+        .nav-links { display: flex; gap: 24px; }
+        .nav-links a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .2s; }
+        .nav-links a:hover { color: var(--text); }
+
+        .hero { padding: 80px 40px 60px; max-width: 1100px; margin: 0 auto; }
+        .hero-tag { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .hero-tag::before { content: ''; width: 30px; height: 1px; background: var(--accent); }
+        h1 { font-size: clamp(36px,6vw,72px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; margin-bottom: 24px; }
+        .line1 { display: block; color: var(--text); }
+        .line2 { display: block; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-desc { font-size: 16px; color: var(--muted); max-width: 560px; line-height: 1.7; margin-bottom: 40px; }
+        .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; }
+        .btn-primary { padding: 12px 28px; background: var(--accent); color: #000; border: none; border-radius: 6px; font-family: 'Space Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 1px; cursor: pointer; text-decoration: none; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { opacity: .85; transform: translateY(-2px); }
+        .btn-secondary { padding: 12px 28px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-family: 'Space Mono', monospace; font-size: 12px; cursor: pointer; text-decoration: none; transition: all .2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 0 40px 60px; }
+        .stat { background: var(--card); padding: 28px; text-align: center; transition: background .2s; }
+        .stat:hover { background: #161f30; }
+        .stat-num { font-family: 'Space Mono', monospace; font-size: 32px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+        .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+        .section { max-width: 1100px; margin: 0 auto 60px; padding: 0 40px; }
+        .section-title { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 32px; display: flex; align-items: center; gap: 16px; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .cards-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+        .infra-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; cursor: pointer; transition: all .3s; position: relative; overflow: hidden; }
+        .infra-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, var(--glow), transparent); opacity: 0; transition: opacity .3s; }
+        .infra-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,217,255,.1); }
+        .infra-card:hover::before { opacity: 1; }
+        .card-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; }
+        .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+        .card-service { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 2px; margin-bottom: 10px; }
+        .card-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+        .card-detail { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent3); }
+
+        .terminal { background: #0a0e1a; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .terminal-header { background: #111827; padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+        .terminal-dots { display: flex; gap: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f57; }
+        .dot-yellow { background: #febc2e; }
+        .dot-green { background: #28c840; }
+        .terminal-title { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+        .terminal-body { padding: 24px; font-family: 'Space Mono', monospace; font-size: 13px; line-height: 2; }
+        .t-comment { color: #4b5563; }
+        .t-cmd { color: var(--accent3); }
+        .t-output { color: #9ca3af; }
+        .t-success { color: var(--accent3); }
+        .t-accent { color: var(--accent); }
+        .t-resource { color: var(--accent4); }
+        .typing-cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent); animation: blink 1s step-end infinite; vertical-align: middle; }
+        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+
+        .pipeline { display: flex; align-items: center; overflow-x: auto; padding-bottom: 8px; }
+        .pipeline-step { flex: 1; min-width: 140px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; position: relative; transition: all .3s; }
+        .pipeline-step:hover { border-color: var(--accent3); box-shadow: 0 0 20px rgba(16,185,129,.15); }
+        .pipeline-arrow { color: var(--border); font-size: 20px; padding: 0 8px; flex-shrink: 0; }
+        .step-icon { font-size: 22px; margin-bottom: 8px; }
+        .step-title { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+        .step-sub { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+        .step-badge { position: absolute; top: -8px; right: -8px; background: var(--accent3); color: #000; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px; font-family: 'Space Mono', monospace; }
+
+        .tech-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+        .tech-tag { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); transition: all .2s; cursor: default; }
+        .tech-tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,217,255,.05); }
+
+        footer { border-top: 1px solid var(--border); padding: 32px 40px; max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .footer-left { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); }
+        .footer-left span { color: var(--accent); }
+        .footer-right { display: flex; gap: 20px; }
+        .footer-right a { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); text-decoration: none; transition: color .2s; }
+        .footer-right a:hover { color: var(--accent); }
+
+        .fade-in { opacity: 0; transform: translateY(20px); animation: fadeIn .6s ease forwards; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .fade-in:nth-child(1) { animation-delay: .1s; }
+        .fade-in:nth-child(2) { animation-delay: .2s; }
+        .fade-in:nth-child(3) { animation-delay: .3s; }
+        .fade-in:nth-child(4) { animation-delay: .4s; }
+        .fade-in:nth-child(5) { animation-delay: .5s; }
+        .fade-in:nth-child(6) { animation-delay: .6s; }
+
+        @media (max-width: 768px) {
+            .cards-grid { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: repeat(2,1fr); }
+            nav { padding: 16px 20px; }
+            .hero { padding: 40px 20px; }
+            .section { padding: 0 20px; }
+            h1 { font-size: 36px; }
+            .nav-links { display: none; }
+            .pipeline { flex-direction: column; }
+            .pipeline-arrow { transform: rotate(90deg); }
+            footer { flex-direction: column; gap: 16px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+    <div class="content">
+        <nav>
+            <div class="nav-logo">$ aws-cloud-infra</div>
+            <div class="nav-status">
+                <div class="status-dot"></div>
+                ALL SYSTEMS OPERATIONAL
+            </div>
+            <div class="nav-links">
+                <a href="#architecture">Architecture</a>
+                <a href="#pipeline">Pipeline</a>
+                <a href="#stack">Stack</a>
+                <a href="https://github.com/krishna310301/aws-cloud-infra">GitHub</a>
+            </div>
+        </nav>
+
+        <div class="hero">
+            <div class="hero-tag">Infrastructure as Code</div>
+            <h1>
+                <span class="line1">AWS Cloud</span>
+                <span class="line2">Infrastructure</span>
+            </h1>
+            <p class="hero-desc">
+                Production-style cloud infrastructure provisioned entirely through Terraform —
+                VPC, EC2, S3, IAM, and CloudWatch monitoring, deployed with a single command.
+                Built by <strong style="color:var(--text)">Krishna Koushik Thokala</strong>,
+                MS in CS at Indiana University.
+            </p>
+            <div class="hero-cta">
+                <a href="https://github.com/krishna310301/aws-cloud-infra" class="btn-primary">View on GitHub</a>
+                <a href="#architecture" class="btn-secondary">Explore Architecture</a>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><div class="stat-num" id="c1">0</div><div class="stat-label">AWS Resources</div></div>
+            <div class="stat"><div class="stat-num" id="c2">0</div><div class="stat-label">Deploy Time (min)</div></div>
+            <div class="stat"><div class="stat-num" id="c3">0</div><div class="stat-label">Lines of IaC</div></div>
+            <div class="stat"><div class="stat-num" id="c4">0%</div><div class="stat-label">Manual Config</div></div>
+        </div>
+
+        <div class="section" id="architecture">
+            <div class="section-title">Architecture</div>
+            <div class="cards-grid">
+                <div class="infra-card fade-in">
+                    <div class="card-icon" style="background:rgba(0,217,255,.1)">🌐</div>
+                    <div class="card-service">AWS VPC</div>
+                    <div class="card-title">Virtual Private Cloud</div>
+                    <div class="card-desc">Isolated private network with public subnet, internet gateway, and custom route tables for controlled traffic flow.</div>
+                    <div class="card-detail">CIDR: 10.0.0.0/16 · us-east-2a</div>
+                </div>
+                <div class="infra-card fade-in">
+                    <div class="card-icon" style="background:rgba(245,158,11,.1)">🖥️</div>
+                    <div class="card-service">AWS EC2</div>
+                    <div class="card-title">Compute Instance</div>
+                    <div class="card-desc">t3.micro server running Amazon Linux 2 inside the VPC, serving this very webpage you are reading right now.</div>
+                    <div class="card-detail">t3.micro · Amazon Linux 2 · Free Tier</div>
+                </div>
+                <div class="infra-card fade-in">
+                    <div class="card-icon" style="background:rgba(124,58,237,.1)">🪣</div>
+                    <div class="card-service">AWS S3</div>
+                    <div class="card-title">Private Storage Bucket</div>
+                    <div class="card-desc">Logging bucket with all public access blocked via bucket policy — security best practice enforced through Terraform.</div>
+                    <div class="card-detail">Public Access: Blocked · Encrypted</div>
+                </div>
+                <div class="infra-card fade-in">
+                    <div class="card-icon" style="background:rgba(16,185,129,.1)">🔒</div>
+                    <div class="card-service">AWS IAM</div>
+                    <div class="card-title">Least-Privilege Roles</div>
+                    <div class="card-desc">IAM user scoped to only EC2, S3, VPC, and CloudWatch. No root credentials used anywhere in this project.</div>
+                    <div class="card-detail">4 Policies · Principle of Least Privilege</div>
+                </div>
+                <div class="infra-card fade-in">
+                    <div class="card-icon" style="background:rgba(239,68,68,.1)">📊</div>
+                    <div class="card-service">AWS CloudWatch</div>
+                    <div class="card-title">Monitoring and Alerting</div>
+                    <div class="card-desc">CPU utilization alarm triggers when usage exceeds 80% for 4 consecutive minutes — automated observability.</div>
+                    <div class="card-detail">Threshold: 80% CPU · Period: 120s</div>
+                </div>
+                <div class="infra-card fade-in">
+                    <div class="card-icon" style="background:rgba(0,217,255,.1)">🛡️</div>
+                    <div class="card-service">Security Groups</div>
+                    <div class="card-title">Firewall Rules</div>
+                    <div class="card-desc">Restrictive inbound rules — only ports 80 and 22 allowed. All other inbound traffic blocked by default.</div>
+                    <div class="card-detail">Port 80 + 22 Inbound · All Outbound</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="pipeline">
+            <div class="section-title">CI/CD Pipeline</div>
+            <div class="pipeline">
+                <div class="pipeline-step">
+                    <div class="step-icon">✏️</div>
+                    <div class="step-title">Code Change</div>
+                    <div class="step-sub">Edit main.tf</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-icon">📤</div>
+                    <div class="step-title">Git Push</div>
+                    <div class="step-sub">Push to main</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-badge">AUTO</div>
+                    <div class="step-icon">⚙️</div>
+                    <div class="step-title">GitHub Actions</div>
+                    <div class="step-sub">Trigger workflow</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-icon">🔍</div>
+                    <div class="step-title">TF Init</div>
+                    <div class="step-sub">Init providers</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="step-badge">VALIDATED</div>
+                    <div class="step-icon">✅</div>
+                    <div class="step-title">TF Plan</div>
+                    <div class="step-sub">Validate IaC</div>
+                </div>
+            </div>
+
+            <div class="terminal" style="margin-top:24px">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <div class="terminal-title">~/aws-cloud-infra — terraform apply</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="t-comment"># Provisioning AWS infrastructure with Terraform</div>
+                    <div><span class="t-cmd">$</span> terraform apply</div>
+                    <div class="t-output">Plan: <span class="t-accent">11 to add</span>, 0 to change, 0 to destroy.</div>
+                    <div>&nbsp;</div>
+                    <div><span class="t-resource">+ aws_vpc.main</span> <span class="t-output">will be created</span></div>
+                    <div><span class="t-resource">+ aws_subnet.public</span> <span class="t-output">will be created</span></div>
+                    <div><span class="t-resource">+ aws_instance.web</span> <span class="t-output">will be created</span></div>
+                    <div><span class="t-resource">+ aws_s3_bucket.logs</span> <span class="t-output">will be created</span></div>
+                    <div><span class="t-resource">+ aws_cloudwatch_metric_alarm.high_cpu</span> <span class="t-output">will be created</span></div>
+                    <div>&nbsp;</div>
+                    <div class="t-success">Apply complete! Resources: 11 added, 0 changed, 0 destroyed.</div>
+                    <div>&nbsp;</div>
+                    <div><span class="t-accent">ec2_public_ip</span> = <span class="t-success">"3.145.48.114"</span></div>
+                    <div><span class="t-cmd">$</span> <span class="typing-cursor"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="stack">
+            <div class="section-title">Tech Stack</div>
+            <div class="tech-grid">
+                <span class="tech-tag">Terraform v1.15</span>
+                <span class="tech-tag">AWS EC2</span>
+                <span class="tech-tag">AWS VPC</span>
+                <span class="tech-tag">AWS S3</span>
+                <span class="tech-tag">AWS IAM</span>
+                <span class="tech-tag">AWS CloudWatch</span>
+                <span class="tech-tag">GitHub Actions</span>
+                <span class="tech-tag">Amazon Linux 2</span>
+                <span class="tech-tag">Infrastructure as Code</span>
+                <span class="tech-tag">Python 3</span>
+                <span class="tech-tag">Bash</span>
+                <span class="tech-tag">Git</span>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-left">
+                Built by <span>Krishna Koushik Thokala</span> · MS CS @ Indiana University · May 2026
+            </div>
+            <div class="footer-right">
+                <a href="https://github.com/krishna310301/aws-cloud-infra">GitHub</a>
+                <a href="https://linkedin.com/in/krishna3103">LinkedIn</a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        function animateCounter(id, target, suffix, duration) {
+            const el = document.getElementById(id);
+            let start = 0;
+            const step = target / (duration / 16);
+            const timer = setInterval(() => {
+                start += step;
+                if (start >= target) { el.textContent = target + suffix; clearInterval(timer); }
+                else { el.textContent = Math.floor(start) + suffix; }
+            }, 16);
+        }
+        window.addEventListener('load', () => {
+            setTimeout(() => animateCounter('c1', 11, '', 1500), 300);
+            setTimeout(() => animateCounter('c2', 2, '', 1500), 500);
+            setTimeout(() => animateCounter('c3', 160, '', 1500), 700);
+            setTimeout(() => { document.getElementById('c4').textContent = '0%'; }, 900);
+        });
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>
